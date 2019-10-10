@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% csrf_token %} 
+
+{% block content %}
+
+    <h1> Map inited </h1>
+    <div id="mapid" style="height:900px; width:1500px;"></div>
+
+    <script>
+
+        $( document ).ready(function() {
+            var mymap = L.map('mapid').setView([55.68890655424603, 37.71373720193606], 11);
+            //1 37.395 55.9146, 37.31525899879085 55.9146, 37.31525048099378 55.86970071682488, 37.39499145774219 55.86965319556822, 37.395 55.9146
+            //100 38.11191046866836 55.506155321909, 38.03218121668373 55.50659844568022, 38.03201516311327 55.46126562191704, 38.11174394144544 55.46077326683297, 38.11191046866836 55.506155321909
+            //50 38.11248017144138 55.73306809192702, 38.03274929903822 55.73326504220473, 38.03267064107988 55.68793146435171, 38.11240128911475 55.68768527760874, 38.11248017144138 55.73306809192702
+            //55 37.71373720193606 55.68890655424603, 37.6340011341616 55.68914793265866, 37.63390635924652 55.6440577482594, 37.71364215569094 55.64376809573063, 37.71373720193606 55.68890655424603
+
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox.streets',
+                accessToken: 'pk.eyJ1Ijoic2hpenpnYXIiLCJhIjoiY2pxa3p0bHg1MW9oejN4bWJobWZpZDNpOSJ9.q3iuyK04zDch7wRAHp48dg'
+            }).addTo(mymap);
+
+            var imageUrl = '';
+            var imageBounds = '';
+            var gasLayer = L.layerGroup();
+
+            function get_pic(){
+                $.ajax({
+                    url: '/pic/',
+                    type: 'get', // This is the default though, you don't actually need to always mention it
+                    success: function(data) {
+
+
+                        let oldGasLayer = gasLayer;
+                        gasLayer = L.layerGroup();
+
+                        for (let step = 0; step < 100; step++) {
+                            imageUrl = data[step].pic;
+                            imageBounds = data[step].bounds;
+                            //L.imageOverlay(imageUrl, imageBounds,{opacity:0.5}).addTo(mymap);                                
+                            img = L.imageOverlay(imageUrl, imageBounds,{opacity:0.6});
+                            gasLayer.addLayer(img);
+                        };
+
+                        gasLayer.addTo(mymap);
+                        oldGasLayer.remove();
+
+
+                    },
+                    complete: function(data){
+                        setTimeout(function(){get_pic();}, 500);
+                    },
+                    failure: function(data) { 
+                        alert('Got an error dude');
+                    }
+                }); 
+            }
+            get_pic();          
+        });
+
+
+    </script>
+
+{% endblock %}

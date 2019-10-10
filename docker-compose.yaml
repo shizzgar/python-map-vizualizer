@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+
+  db:  # <-- IMPORTANT: same name as in DATABASES setting, otherwise Django won't find the database!
+    image: geographica/postgis:tasty_termite
+    ports:
+      - 5432:5432
+    env_file:  # <-- we use the previously defined values
+      - db_env
+    networks:  # <-- connect to the bridge
+      - db_network
+    volumes:    
+      - db_volume:/var/lib/postgresql/data
+
+  dbadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "steeji.rat@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "steeji.ret1!"
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - db_network
+
+
+networks:  # <-- and here
+  db_network:  # <-- connect to the bridge
+    driver: bridge      
+
+volumes:
+  db_volume:
